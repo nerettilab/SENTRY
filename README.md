@@ -10,7 +10,7 @@
 
 ## Introduction
 
-**SENTRY** is a comprehensive bioinformatics pipeline designed for analyzing single-cell RNA sequencing (scRNA-seq) data. This pipeline integrates machine learning predictions (such as cellular senescence state, cell type, or disease state), gene expression analysis, and cell cycle scoring to provide detailed insights into cellular heterogeneity and gene regulation patterns. A key strength is its ability to chain multiple machine learning models together, allowing for sophisticated multi-stage prediction workflows.
+**SENTRY (SENescence TRacking sYstem)** is a Nextflow pipeline for analyzing single-cell RNA sequencing (scRNA-seq) data. This pipeline integrates machine learning predictions (such as cellular senescence state, cell type, or disease state), gene expression analysis, and cell cycle scoring to provide detailed insights into cellular heterogeneity and gene regulation patterns. A key strength is its ability to chain multiple machine learning models together, allowing for sophisticated multi-stage prediction workflows.
 
 ### Key Features
 
@@ -176,8 +176,11 @@ If you would like to contribute to this pipeline, please see the [contributing g
 
 ## Citations
 
-<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use nerettilab/SENTRY for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+If you use SENTRY in your research, please cite:
+
+> Hinthorn S, Rocha A, Neretti N. SENTRY: An AI Framework for Identifying and Characterizing Primary and Secondary Senescence. _(in preparation)_
+
+The single-cell RNA-seq data generated for the study are available from GEO under accession [GSE306635](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE306635).
 
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
 
