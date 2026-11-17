@@ -1,16 +1,16 @@
-<!-- [![GitHub Actions CI Status](https://github.com/nerettilab/scrna_analysis_ml_pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/nerettilab/scrna_analysis_ml_pipeline/actions/workflows/ci.yml) -->
-<!-- [![GitHub Actions Linting Status](https://github.com/nerettilab/scrna_analysis_ml_pipeline/actions/workflows/linting.yml/badge.svg)](https://github.com/nerettilab/scrna_analysis_ml_pipeline/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX) -->
+<!-- [![GitHub Actions CI Status](https://github.com/nerettilab/SENTRY/actions/workflows/ci.yml/badge.svg)](https://github.com/nerettilab/SENTRY/actions/workflows/ci.yml) -->
+<!-- [![GitHub Actions Linting Status](https://github.com/nerettilab/SENTRY/actions/workflows/linting.yml/badge.svg)](https://github.com/nerettilab/SENTRY/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX) -->
 <!-- [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com) -->
 
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.04.0-23aa62.svg)](https://www.nextflow.io/)
 <!-- [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/) -->
 <!-- [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/) -->
 <!-- [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/) -->
-<!-- [![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/nerettilab/scrna_analysis_ml_pipeline) -->
+<!-- [![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/nerettilab/SENTRY) -->
 
 ## Introduction
 
-**scRNA Analysis Machine Learning Composer Pipeline (SAMLCP)** is a comprehensive bioinformatics pipeline designed for analyzing single-cell RNA sequencing (scRNA-seq) data. This pipeline integrates machine learning predictions (such as cellular senescence state, cell type, or disease state), gene expression analysis, and cell cycle scoring to provide detailed insights into cellular heterogeneity and gene regulation patterns. A key strength is its ability to chain multiple machine learning models together, allowing for sophisticated multi-stage prediction workflows.
+**SENTRY** is a comprehensive bioinformatics pipeline designed for analyzing single-cell RNA sequencing (scRNA-seq) data. This pipeline integrates machine learning predictions (such as cellular senescence state, cell type, or disease state), gene expression analysis, and cell cycle scoring to provide detailed insights into cellular heterogeneity and gene regulation patterns. A key strength is its ability to chain multiple machine learning models together, allowing for sophisticated multi-stage prediction workflows.
 
 ### Key Features
 
@@ -137,7 +137,7 @@ This configuration demonstrates:
 
 Basic command:
 ```bash
-nextflow run nerettilab/scrna_analysis_ml_pipeline \
+nextflow run nerettilab/SENTRY \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR> \
@@ -168,7 +168,7 @@ For more detailed usage instructions and parameter descriptions, please refer to
 
 ## Credits
 
-nerettilab/scrna_analysis_ml_pipeline was originally written by Samuel Hinthorn.
+nerettilab/SENTRY was originally written by Samuel Hinthorn.
 
 ## Contributions and Support
 
@@ -177,7 +177,7 @@ If you would like to contribute to this pipeline, please see the [contributing g
 ## Citations
 
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use nerettilab/scrna_analysis_ml_pipeline for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+<!-- If you use nerettilab/SENTRY for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
 

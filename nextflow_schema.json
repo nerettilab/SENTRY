@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nerettilab/scrna_analysis_ml_pipeline/master/nextflow_schema.json",
-    "title": "nerettilab/scrna_analysis_ml_pipeline pipeline parameters",
+    "$id": "https://raw.githubusercontent.com/nerettilab/SENTRY/master/nextflow_schema.json",
+    "title": "nerettilab/SENTRY pipeline parameters",
     "description": "Pipeline to analyze scRNA datasets by gene expression and machine learning predictions, incorporating metadata variables",
     "type": "object",
     "definitions": {

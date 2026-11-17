@@ -1,6 +1,6 @@
 {
-    "name": "nerettilab/scrna_analysis_ml_pipeline",
-    "homePage": "https://github.com/nerettilab/scrna_analysis_ml_pipeline",
+    "name": "nerettilab/SENTRY",
+    "homePage": "https://github.com/nerettilab/SENTRY",
     "repos": {
         "https://github.com/nf-core/modules.git": {
             "modules": {

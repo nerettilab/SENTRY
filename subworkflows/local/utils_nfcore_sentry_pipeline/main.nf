@@ -1,5 +1,5 @@
 //
-// Subworkflow with functionality specific to the nerettilab/scrna_analysis_ml_pipeline pipeline
+// Subworkflow with functionality specific to the nerettilab/SENTRY pipeline
 //
 
 /*

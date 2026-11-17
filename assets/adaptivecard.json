@@ -17,7 +17,7 @@
                         "size": "Large",
                         "weight": "Bolder",
                         "color": "<% if (success) { %>Good<% } else { %>Attention<%} %>",
-                        "text": "nerettilab/scrna_analysis_ml_pipeline v${version} - ${runName}",
+                        "text": "nerettilab/SENTRY v${version} - ${runName}",
                         "wrap": true
                     },
                     {

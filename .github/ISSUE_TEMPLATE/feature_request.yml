@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an idea for the nerettilab/scrna_analysis_ml_pipeline pipeline
+description: Suggest an idea for the nerettilab/SENTRY pipeline
 labels: enhancement
 body:
   - type: textarea

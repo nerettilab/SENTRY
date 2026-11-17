@@ -1,4 +1,4 @@
-# nerettilab/scrna_analysis_ml_pipeline: Output
+# nerettilab/SENTRY: Output
 
 ## Introduction
 

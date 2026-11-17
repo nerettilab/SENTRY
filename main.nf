@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    nerettilab/scrna_analysis_ml_pipeline
+    nerettilab/SENTRY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nerettilab/scrna_analysis_ml_pipeline
+    Github : https://github.com/nerettilab/SENTRY
 ----------------------------------------------------------------------------------------
 */
 
@@ -15,9 +15,9 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { SCRNA_ANALYSIS_ML_PIPELINE  } from './workflows/scrna_analysis_ml_pipeline'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_scrna_analysis_ml_pipeline_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_scrna_analysis_ml_pipeline_pipeline'
+include { SENTRY  } from './workflows/sentry'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_sentry_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_sentry_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,7 +28,7 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_scrn
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow NERETTILAB_SCRNA_ANALYSIS_ML_PIPELINE {
+workflow NERETTILAB_SENTRY {
 
     take:
     samplesheet // channel: samplesheet read in from --input
@@ -38,12 +38,12 @@ workflow NERETTILAB_SCRNA_ANALYSIS_ML_PIPELINE {
     //
     // WORKFLOW: Run pipeline
     //
-    SCRNA_ANALYSIS_ML_PIPELINE (
+    SENTRY (
         samplesheet
     )
 
     emit:
-    multiqc_report = SCRNA_ANALYSIS_ML_PIPELINE.out.multiqc_report // channel: /path/to/multiqc_report.html
+    multiqc_report = SENTRY.out.multiqc_report // channel: /path/to/multiqc_report.html
 
 }
 /*
@@ -72,7 +72,7 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    NERETTILAB_SCRNA_ANALYSIS_ML_PIPELINE (
+    NERETTILAB_SENTRY (
         PIPELINE_INITIALISATION.out.samplesheet
     )
 
@@ -86,7 +86,7 @@ workflow {
         params.outdir,
         params.monochrome_logs,
         params.hook_url,
-        NERETTILAB_SCRNA_ANALYSIS_ML_PIPELINE.out.multiqc_report
+        NERETTILAB_SENTRY.out.multiqc_report
     )
 }
 
