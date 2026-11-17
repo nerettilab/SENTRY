@@ -3,7 +3,7 @@ process CREATE_BARS{
     conda "${moduleDir}/environment.yml"
 
     input:
-    path(processed_data_file)
+    tuple val(meta), path(processed_data_file)
     val(uns_name)
     val(column1)
     val(column2)
@@ -12,11 +12,12 @@ process CREATE_BARS{
     path("*.{png,pdf,svg}")
 
     script:
+    def prefix = "${uns_name}_${meta.id}"
     """
     python \
     ${workflow.projectDir}/bin/create_bar_charts.py \
     $processed_data_file \
-    "${uns_name}" \
+    "${prefix}" \
     "${column1}" \
     "${column2}" \
     "."

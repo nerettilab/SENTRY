@@ -10,8 +10,6 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_sentry_pipeline'
 include { PREPROCESS_ADATA        } from '../modules/local/preprocess_adata'
-// include { ANALYZE_SINGLE_CATEGORY } from '../modules/local/analyze_single_category'
-// include { COMBINE_CATEGORIES      } from '../modules/local/combine_categories'
 
 include { GROUP_ANALYSIS_COMBINATIONS } from  '../modules/local/group_analysis_combinations'
 include { CREATE_PIES             } from '../modules/local/create_pies'
@@ -34,21 +32,20 @@ workflow SENTRY {
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
-    ch_folder_paths = ch_samplesheet.map { it[1] }
-    print("Folder paths before: ${ch_folder_paths.collect()}")
-    // Convert Seurat to AnnData for RDS files
+    // Each item is [ meta, path_to_single_cell_object ]
+    ch_input = ch_samplesheet
+
+    // Convert Seurat (.rds) inputs to AnnData
     if (params.seurat_input) {
-        CONVERT_SEURAT_TO_ANNDATA(ch_folder_paths)
-        ch_folder_paths = CONVERT_SEURAT_TO_ANNDATA.out
+        CONVERT_SEURAT_TO_ANNDATA(ch_input)
+        ch_input = CONVERT_SEURAT_TO_ANNDATA.out.converted_h5ad_file
     }
-    print("Folder paths: ${ch_folder_paths.collect()}")
 
-    homolog_table_path = Channel.of("${workflow.projectDir}/resources/HOM_MouseHumanSequence.rpt")
-    cell_cycle_genes_path = Channel.of("${workflow.projectDir}/resources/regev_lab_cell_cycle_genes.txt")
+    homolog_table_path = Channel.value("${workflow.projectDir}/resources/HOM_MouseHumanSequence.rpt")
+    cell_cycle_genes_path = Channel.value("${workflow.projectDir}/resources/regev_lab_cell_cycle_genes.txt")
 
-    // RUN PREPROCESS_DATA
     PREPROCESS_ADATA(
-        ch_folder_paths,
+        ch_input,
         params.threshold_combinations,
         params.uns_name,
         params.sample_taxon,
@@ -59,32 +56,32 @@ workflow SENTRY {
         params.var_colname,
         params.layer_name,
         params.save_h5ad
-        )
+    )
 
-    // RUN GROUP_ANALYSIS_COMBINATIONS
     GROUP_ANALYSIS_COMBINATIONS(
-        PREPROCESS_ADATA.out.processed_tsv.flatten(), 
+        PREPROCESS_ADATA.out.processed_tsv,
         params.uns_name,
         params.column1,
         params.column2,
         params.sample_column
-        )
+    )
 
-    // RUN CREATE_PIES
+    // One task per [ meta, tsv ] pair; a sample can produce several TSVs
+    def splitPerFile = { meta, files -> (files instanceof List ? files : [files]).collect { f -> [meta, f] } }
+
     CREATE_PIES(
-        GROUP_ANALYSIS_COMBINATIONS.out.gene_combinations.flatten(),
+        GROUP_ANALYSIS_COMBINATIONS.out.gene_combinations.flatMap(splitPerFile),
         params.uns_name,
         params.column1,
         params.column2
-        )
-    
-    CREATE_BARS(
-        GROUP_ANALYSIS_COMBINATIONS.out.gene_combinations_with_sample.flatten(),
-        params.uns_name,
-        params.column1,
-        params.column2
-        )
+    )
 
+    CREATE_BARS(
+        GROUP_ANALYSIS_COMBINATIONS.out.gene_combinations_with_sample.flatMap(splitPerFile),
+        params.uns_name,
+        params.column1,
+        params.column2
+    )
 
     // Collate and save software versions
     //

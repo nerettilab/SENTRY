@@ -26,5 +26,4 @@ ggplot(results_data,
 column3_name <- colnames(results_data)[3]
 output_dir <- file.path(output_dir)
 output_file_path <- file.path(output_dir, paste0(project_name, "_", column3_name, "_pie.png"))
-ggsave(output_file_path, width = 12, height = 12, dpi = 300, create.dir = TRUE)
-ggsave(file.path(".", paste0(project_name, "_", column3_name, "_pie.png")), width = 20, height = 20, dpi = 300, create.dir = TRUE)
+ggsave(output_file_path, width = 20, height = 20, dpi = 300, create.dir = TRUE)

@@ -10,6 +10,9 @@ import pandas as pd
 import convert_species
 from simple_py_utils import KeyDict, str2bool, filter_threshold_combinations
 
+HUMAN_TAXON = 9606
+MOUSE_TAXON = 10090
+
 def apply_model(adata: anndata.AnnData,
                 model_config: str,
                 homolog_table_path: str,
@@ -46,8 +49,9 @@ def apply_model(adata: anndata.AnnData,
             target_gene_set = pd.read_csv(model_config['gene_set_file'], sep="\t", header=gene_set_header).iloc[:, 0].tolist()
     else:
         target_gene_set = clf.feature_names_in_
+    sample_taxon = adata.uns['sample_taxon']
     # Check if the model taxon matches the sample taxon
-    if model_taxon != adata.uns['sample_taxon']:
+    if model_taxon != sample_taxon:
         print("Warning: model taxon is not the same as the sample taxon, converting sample taxon to model taxon for prediction")
 
         # Load the homolog table
@@ -57,8 +61,16 @@ def apply_model(adata: anndata.AnnData,
         id2symbols, _, _ = convert_species.get_id2symbols_dict(homolog_table)
         compatible_genes, reverse_translate_dict = convert_species.get_compatible_genes(id2symbols)
 
-        # Get the one-to-one dictionary for gene conversion
-        one2one_dict = convert_species.get_one_to_one_only(reverse_translate_dict, compatible_genes)
+        # compatible_genes maps human -> mouse symbols, reverse_translate_dict maps mouse -> human.
+        # Build the one-to-one dictionary in the sample -> model direction.
+        if (sample_taxon, model_taxon) == (MOUSE_TAXON, HUMAN_TAXON):
+            one2one_dict = convert_species.get_one_to_one_only(reverse_translate_dict, compatible_genes)
+        elif (sample_taxon, model_taxon) == (HUMAN_TAXON, MOUSE_TAXON):
+            one2one_dict = convert_species.get_one_to_one_only(compatible_genes, reverse_translate_dict)
+        else:
+            raise ValueError(
+                f"Cannot convert genes from taxon {sample_taxon} to taxon {model_taxon}; "
+                f"only human ({HUMAN_TAXON}) and mouse ({MOUSE_TAXON}) are supported.")
 
         # Convert the AnnData object to the model taxon
         adata = convert_species.convert_species_one2one_adata(adata, one2one_dict, target_genes=target_gene_set)

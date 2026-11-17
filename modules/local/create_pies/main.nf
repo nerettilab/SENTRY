@@ -3,7 +3,7 @@ process CREATE_PIES {
     conda "${moduleDir}/environment.yml"
 
     input:
-    path(processed_data_file)
+    tuple val(meta), path(processed_data_file)
     val(uns_name)
     val(column1)
     val(column2)
@@ -12,11 +12,12 @@ process CREATE_PIES {
     path("*.png")
 
     script:
+    def prefix = "${uns_name}_${meta.id}"
     """
     Rscript \
     ${workflow.projectDir}/bin/create_pie_charts.R \
     $processed_data_file \
-    "${uns_name}" \
+    "${prefix}" \
     "${column1}" \
     "${column2}" \
     "."

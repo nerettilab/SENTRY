@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import re
 import sys
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+def safe_filename_part(value) -> str:
+    """Replace characters that are not safe in file names (e.g. "/" in "CD4+/CD8+")."""
+    return re.sub(r"[^A-Za-z0-9._+-]+", "_", str(value))
 
 def main():
     # Check if the required arguments are provided
@@ -56,7 +61,7 @@ def main():
         plt.xticks(rotation=90)
 
         # Save the plot to a file
-        output_file_path = f"{output_dir}/{project_name}_{cell_type}_{results_data.columns[2]}_bar_chart.svg"
+        output_file_path = f"{output_dir}/{project_name}_{safe_filename_part(cell_type)}_{safe_filename_part(results_data.columns[2])}_bar_chart.svg"
         plt.savefig(output_file_path, dpi=300, bbox_inches='tight')
 
         # Close the plot to free up memory

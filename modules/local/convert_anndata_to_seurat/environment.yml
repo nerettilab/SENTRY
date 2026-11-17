@@ -2,7 +2,6 @@ name: sceasy_nextflow
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - bioconda::r-sceasy=0.0.7
   - conda-forge::r-seurat=5.1.0

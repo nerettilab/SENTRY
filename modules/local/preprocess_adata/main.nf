@@ -7,7 +7,7 @@ process PREPROCESS_ADATA {
     conda "${moduleDir}/environment.yml"
 
     input:
-    val(original_input_file)
+    tuple val(meta), val(original_input_file)
     val(threshold_combinations)
     val(uns_name)
     val(sample_taxon)
@@ -20,16 +20,17 @@ process PREPROCESS_ADATA {
     val(save_h5ad)
 
     output:
-    path("*_processed_data.tsv.gz"), emit: processed_tsv
-    path("*_processed_data.h5ad"), emit: processed_data_file, optional: true
+    tuple val(meta), path("*_processed_data.tsv.gz"), emit: processed_tsv
+    tuple val(meta), path("*_processed_data.h5ad"), emit: processed_data_file, optional: true
 
     script:
+    def prefix = "${uns_name}_${meta.id}"
     """
     python \
     '${workflow.projectDir}/bin/preprocess_adata.py' \
     --input-file='${original_input_file}' \
     --threshold-combinations='${threshold_combinations}' \
-    --output-file='${uns_name}_processed_data.h5ad' \
+    --output-file='${prefix}_processed_data.h5ad' \
     --name-to-add='${uns_name}' \
     --sample-taxon='${sample_taxon}' \
     --column2='${column2}' \

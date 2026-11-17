@@ -4,10 +4,10 @@ process CONVERT_SEURAT_TO_ANNDATA{
     conda "${moduleDir}/environment.yml"
 
     input:
-    val(original_input_file)
+    tuple val(meta), val(original_input_file)
 
     output:
-    path("*.h5ad"), emit: converted_h5ad_file
+    tuple val(meta), path("*.h5ad"), emit: converted_h5ad_file
 
     script:
     """

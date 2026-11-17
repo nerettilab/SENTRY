@@ -11,6 +11,7 @@ The resulting dataframes are saved as TSV files and can be used for graphing in 
 """
 import argparse
 import os
+import re
 import pandas as pd
 
 def process_data_for_graphing(graph_df: pd.DataFrame,
@@ -31,8 +32,7 @@ def process_data_for_graphing(graph_df: pd.DataFrame,
         {level2_category: "count"}).rename(columns={level2_category: "Count"}).reset_index()
     count_age_celltype_df[f"Proportion_{level2_category}_Per_{level1_category}"] = count_age_celltype_df["Count"] / \
                                                                                     count_age_celltype_df.groupby(
-                                                                                        level1_category,
-                                                                                        axis="index")[
+                                                                                        level1_category)[
                                                                                         "Count"].transform("sum")
     print("count_age_celltype_df")
     print(count_age_celltype_df.head())
@@ -50,7 +50,7 @@ def process_data_for_graphing(graph_df: pd.DataFrame,
     # Calculate proportion of each level3_category for each combination of level1_category and level2_category
     graph_df_unique_counts[f"Proportion_{level3_category}_Per_{level1_category}_AND_{level2_category}_Combination"] = \
         graph_df_unique_counts["count"] / graph_df_unique_counts.groupby(
-            [level1_category, level2_category], axis="index")["count"].transform("sum")
+            [level1_category, level2_category])["count"].transform("sum")
 
     graph_df_unique_counts = graph_df_unique_counts.fillna(0)
     return graph_df_unique_counts
@@ -72,8 +72,7 @@ def process_categorical_data_for_graphing_with_sample(graph_df: pd.DataFrame,
         {level2_category: "count"}).rename(columns={level2_category: "Count"}).reset_index()
     count_age_celltype_df[f"Proportion_{level2_category}_Per_{level1_category}"] = count_age_celltype_df["Count"] / \
                                                                                     count_age_celltype_df.groupby(
-                                                                                        level1_category,
-                                                                                        axis="index")[
+                                                                                        level1_category)[
                                                                                         "Count"].transform("sum")
     # Set multiindex for count_age_celltype_df
     multiindex = pd.MultiIndex.from_frame(count_age_celltype_df[[level1_category, level2_category]])
@@ -89,14 +88,21 @@ def process_categorical_data_for_graphing_with_sample(graph_df: pd.DataFrame,
     # Calculate proportion of each level3_category for each combination of level1_category and level2_category
     graph_df_unique_counts[f"Proportion_{level3_category}_Per_{level1_category}_AND_{level2_category}_Combination"] = \
         graph_df_unique_counts["count"] / graph_df_unique_counts.groupby(
-            [level1_category, level2_category, sample_category], axis="index")["count"].transform("sum")
+            [level1_category, level2_category, sample_category])["count"].transform("sum")
 
     graph_df_unique_counts = graph_df_unique_counts.fillna(0)
     return graph_df_unique_counts
 
-def age_column_transform(age: str) -> int:
-    """Find number in string and return it as an int"""
-    return int("".join(filter(str.isdigit, age)))
+def age_column_transform(age: str):
+    """Return the first number in an age string, e.g. "18m" -> 18, "3-month" -> 3, "1.5 years" -> 1.5.
+
+    Units are not interpreted, so all values in the column should share the same unit.
+    """
+    match = re.search(r"\d+(?:\.\d+)?", age)
+    if match is None:
+        raise ValueError(f"Could not find a number in age value {age!r}")
+    value = float(match.group())
+    return int(value) if value.is_integer() else value
 def main(df: pd.DataFrame,
          output_path_base: str,
          colnamestart: str="combination_",

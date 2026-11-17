@@ -2,6 +2,5 @@ name: add_gene_combinations_scrna
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - conda-forge::pandas>=2.0.0

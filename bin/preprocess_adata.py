@@ -277,7 +277,9 @@ if __name__ == '__main__':
     parser.add_argument('--cell-cycle-genes-path', type=str,
                         help='path to cell cycle genes file from Aviv Regev lab')
     parser.add_argument('--column2', type=str, default='cell_ontology_class', help='column to use for second level of grouping')
-    parser.add_argument('--use-raw', default=False, help='use scanpy raw data', type=bool)
+    parser.add_argument('--use-raw', type=simple_py_utils.str2bool, default=False,
+                        nargs='?', const=True,
+                        help='use scanpy raw data')
     parser.add_argument('--var-colname', type=str, default=None, help='column name to use for var names')
     parser.add_argument('--layer-name', type=str, default=None, help='layer name to use for data')
     parser.add_argument('--save-h5ad', type=simple_py_utils.str2bool, default=False,
