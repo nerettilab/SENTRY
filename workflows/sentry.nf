@@ -46,7 +46,7 @@ workflow SENTRY {
 
     PREPROCESS_ADATA(
         ch_input,
-        params.threshold_combinations,
+        file(params.threshold_combinations, checkIfExists: true),
         params.uns_name,
         params.sample_taxon,
         params.column2,

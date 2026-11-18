@@ -3,6 +3,7 @@
 """
 Utility functions with no uncommon library dependencies
 """
+import os
 
 class KeyDict(dict):
     """
@@ -87,3 +88,29 @@ def convert_new_to_old_threshold_combinations(new_form_threshold_combinations):
         old_format.append(combination_dict)
     
     return old_format
+
+# Keys in a criteria config that hold file paths, and nested parameter blocks that can hold them
+_PATH_KEYS = ("path", "gene_set_file", "filepath")
+_NESTED_KEYS = ("params", "main_params", "competitor_params")
+
+
+def resolve_config_paths(threshold_combinations, base_dir):
+    """
+    Make relative file paths in threshold combination configs absolute, relative to base_dir.
+
+    Works on the old (list of dicts) format, after convert_new_to_old_threshold_combinations.
+    Absolute paths and paths starting with "~" are left as they are, apart from expanding "~".
+    """
+    def resolve(config):
+        for key in _PATH_KEYS:
+            if isinstance(config.get(key), str):
+                path = os.path.expanduser(config[key])
+                config[key] = path if os.path.isabs(path) else os.path.normpath(os.path.join(base_dir, path))
+        for key in _NESTED_KEYS:
+            if isinstance(config.get(key), dict):
+                resolve(config[key])
+
+    for criteria in threshold_combinations:
+        for criteria_config in criteria.values():
+            resolve(criteria_config)
+    return threshold_combinations

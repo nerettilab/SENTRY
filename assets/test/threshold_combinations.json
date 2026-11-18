@@ -1,0 +1,41 @@
+{
+  "definitions": {
+    "senescence": {
+      "type": "model",
+      "path": "../../models/sentry_senescent_vs_nonsenescent_rf.pkl",
+      "taxon": 9606
+    },
+    "senescence_type": {
+      "type": "model",
+      "path": "../../models/sentry_primary_vs_secondary_rf.pkl",
+      "taxon": 9606
+    },
+    "senescent_only": {
+      "type": "model_select",
+      "path": "../../models/sentry_senescent_vs_nonsenescent_rf.pkl",
+      "taxon": 9606,
+      "keep_classes": ["Senescent"]
+    },
+    "cell_cycle": {
+      "type": "cell_cycle"
+    },
+    "CDKN1A": {
+      "type": "gene",
+      "threshold": 2
+    },
+    "CDKN1A_bins": {
+      "type": "bins",
+      "gene": "CDKN1A",
+      "num_bins": 3,
+      "lower_limit_percentile": 5,
+      "upper_limit_percentile": 95
+    }
+  },
+  "combinations": [
+    ["senescence"],
+    ["senescent_only", "senescence_type"],
+    ["senescent_only", "cell_cycle"],
+    ["CDKN1A", "senescence"],
+    ["CDKN1A_bins"]
+  ]
+}

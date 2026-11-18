@@ -294,6 +294,10 @@ if __name__ == '__main__':
         threshold_combinations_dict = json.load(f)
     if "definitions" in threshold_combinations_dict:
         threshold_combinations_dict = simple_py_utils.convert_new_to_old_threshold_combinations(threshold_combinations_dict)
+    # Relative paths in the config are relative to the config file itself. Nextflow stages the
+    # file into the task directory as a symlink, so follow it back to the original location.
+    config_dir = os.path.dirname(os.path.realpath(args.threshold_combinations))
+    threshold_combinations_dict = simple_py_utils.resolve_config_paths(threshold_combinations_dict, config_dir)
     Resources = namedtuple('Resources', ['homolog_table_path', 'cell_cycle_genes_path'])
     gene_resources = Resources(args.homolog_table_path, args.cell_cycle_genes_path)
     preprocess_data(args.input_file,

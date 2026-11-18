@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nerettilab/SENTRY/master/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/nerettilab/SENTRY/main/nextflow_schema.json",
     "title": "nerettilab/SENTRY pipeline parameters",
     "description": "Pipeline to analyze scRNA datasets by gene expression and machine learning predictions, incorporating metadata variables",
     "type": "object",
@@ -263,83 +263,79 @@
             "properties": {
                 "column1": {
                     "type": "string",
-                    "description": "The first category to group by. Generally a phenotype-related variable, such as age.",
+                    "description": "The adata.obs column for the first grouping level, usually a phenotype such as age or condition.",
                     "fa_icon": "fas fa-indent",
-                    "help_text": "The first category to group by. Generally a phenotype-related variable, such as age."
+                    "help_text": "The adata.obs column for the first grouping level, usually a phenotype such as age or condition."
                 },
                 "column2": {
                     "type": "string",
-                    "description": "The second category to group by. Generally a categorical variable like tissue or cell type",
+                    "description": "The adata.obs column for the second grouping level, usually cell type or tissue.",
                     "fa_icon": "fas fa-indent",
-                    "help_text": "The second category to group by. Generally a categorical variable like tissue or cell type"
+                    "help_text": "The adata.obs column for the second grouping level, usually cell type or tissue."
                 },
                 "sample_column": {
                     "type": "string",
-                    "description": "The obs column for sample identification. Generally a string variable like 'orig.ident', 'sample', or 'patient.id'",
+                    "description": "Optional adata.obs column identifying biological samples or replicates (e.g. 'orig.ident'). Used to compute per-sample proportions and bar chart error bars.",
                     "fa_icon": "fas fa-indent",
-                    "help_text": "The obs column for sample identification. Generally a string variable like 'orig.ident', 'sample', or 'patient.id'"
+                    "help_text": "Optional adata.obs column identifying biological samples or replicates (e.g. 'orig.ident'). Used to compute per-sample proportions and bar chart error bars."
                 },
                 "threshold_combinations": {
                     "type": "string",
-                        "description": "Threshold combinations file path giving analysis features to analyze.",
-                        "fa_icon": "fas fa-file"
+                    "description": "JSON file defining the analysis criteria and the combinations to analyze. Relative paths inside it are resolved from the file's own folder.",
+                    "fa_icon": "fas fa-file",
+                    "format": "file-path",
+                    "exists": true,
+                    "mimetype": "application/json"
                 },
                 "uns_name": {
                     "type": "string",
-                    "description": "Unstructured data name",
+                    "description": "Prefix for output file names; also stored in adata.uns['name'].",
                     "default": "analyzed_data",
                     "fa_icon": "fas fa-tag"
                 },
                 "sample_taxon": {
                     "type": "integer",
-                    "description": "Sample taxon ID",
+                    "description": "NCBI taxon ID of the input data: 9606 (human) or 10090 (mouse).",
                     "default": 9606,
                     "fa_icon": "fas fa-otu"
                 },
                 "use_raw": {
-                    "type": "string",
-                    "description": "Use adata.raw for analysis (if present). Pipeline works better with raw counts to start",
-                    "default": "",
+                    "type": "boolean",
+                    "description": "Use adata.raw.X instead of adata.X. The pipeline expects raw counts.",
+                    "default": false,
                     "fa_icon": "fas fa-check-square"
                 },
                 "var_colname": {
                     "type": "string",
-                    "description": "Column name in adata.vars to use for variable names for analyzing",
+                    "description": "Column in adata.var holding the gene symbols to use, if adata.var_names are not gene symbols (e.g. Ensembl IDs).",
                     "default": "",
                     "fa_icon": "fas fa-column"
                 },
                 "layer_name": {
                     "type": "string",
-                    "description": "Layer name to use for analyzing. Pipeline works better with raw counts to start",
+                    "description": "Layer to use instead of adata.X, e.g. 'counts'. The pipeline expects raw counts.",
                     "default": "",
                     "fa_icon": "fas fa-layer-group"
                 },
-                "minimal_genes": {
-                    "type": "boolean",
-                    "description": "Whether to first subset adata to Minimal gene set necessary for analysis. Default false.",
-                    "default": false,
-                    "fa_icon": "fas fa-gene"
-                },
-                "random_sample_proportion": {
-                    "type": "number",
-                    "description": "Random sample proportion for downsampling cells",
-                    "default": 1,
-                    "fa_icon": "fas fa-random"
-                },
                 "seurat_input": {
                     "type": "boolean",
-                    "description": "Whether to use Seurat input format",
+                    "description": "Inputs are Seurat objects (.rds) and should be converted to AnnData first.",
                     "default": false,
                     "fa_icon": "fas fa-column"
                 },
                 "save_h5ad": {
                     "type": "boolean",
-                    "description": "Whether to save the preprocessed h5ad file",
+                    "description": "Also save each preprocessed AnnData object, with the analysis labels added to adata.obs, as .h5ad.",
                     "default": false,
                     "fa_icon": "fas fa-column"
                 }
-            }
-        }  
+            },
+            "required": [
+                "column1",
+                "column2",
+                "threshold_combinations"
+            ]
+        }
     },
     "allOf": [
         {
@@ -353,6 +349,9 @@
         },
         {
             "$ref": "#/definitions/generic_options"
+        },
+        {
+            "$ref": "#/definitions/analysis_options"
         }
     ]
 }

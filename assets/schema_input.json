@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nerettilab/SENTRY/master/assets/schema_input.json",
+    "$id": "https://raw.githubusercontent.com/nerettilab/SENTRY/main/assets/schema_input.json",
     "title": "nerettilab/SENTRY pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
@@ -11,16 +11,19 @@
                 "type": "string",
                 "pattern": "^\\S+$",
                 "errorMessage": "Sample name must be provided and cannot contain spaces",
-                "meta": ["id"]
+                "meta": [
+                    "id"
+                ]
             },
             "sc_object": {
                 "type": "string",
-                "format": "file-path",
-                "exists": true,
                 "pattern": "^\\S+$",
-                "errorMessage": "sc_object must be provided as path to scanpy object"
+                "errorMessage": "sc_object must be the path to an AnnData (.h5ad) or Seurat (.rds) file, with no spaces"
             }
         },
-        "required": ["sample", "sc_object"]
+        "required": [
+            "sample",
+            "sc_object"
+        ]
     }
 }

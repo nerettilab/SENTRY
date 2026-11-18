@@ -1,15 +1,17 @@
-name: nf-core CI
-# This workflow runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
+name: CI
+# Runs the pipeline end to end on the synthetic test data (-profile test) with conda
 on:
   push:
     branches:
-      - dev
+      - main
   pull_request:
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   NXF_ANSI_LOG: false
+  NXF_CONDA_CACHEDIR: ${{ github.workspace }}/.conda-envs
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
@@ -17,30 +19,56 @@ concurrency:
 
 jobs:
   test:
-    name: Run pipeline with test data
-    # Only run on push if this is the nf-core dev branch (merged PRs)
-    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nerettilab/SENTRY') }}"
+    name: "Test profile (Nextflow ${{ matrix.NXF_VER }})"
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         NXF_VER:
-          - "23.04.0"
-          - "latest-everything"
+          - "23.04.0" # oldest supported version, see manifest.nextflowVersion
+          - "latest-stable"
+    defaults:
+      run:
+        # Login shell so the conda set up by setup-miniconda is on PATH
+        shell: bash -el {0}
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
+
+      - name: Set up conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          conda-remove-defaults: true
+
+      # Nextflow 23.04 does not run on Java 21 or later
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
       - name: Install Nextflow
         uses: nf-core/setup-nextflow@v2
         with:
           version: "${{ matrix.NXF_VER }}"
 
-      - name: Disk space cleanup
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+      - name: Cache conda environments
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NXF_CONDA_CACHEDIR }}
+          key: conda-envs-${{ runner.os }}-${{ hashFiles('modules/**/environment.yml') }}
 
       - name: Run pipeline with test data
-        # TODO nf-core: You can customise CI pipeline run tests as required
-        # For example: adding multiple test runs with different parameters
-        # Remember that you can parallelise this by using strategy.matrix
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --outdir ./results
+          nextflow run ${GITHUB_WORKSPACE} -profile test,conda --outdir ./results
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-nextflow-${{ matrix.NXF_VER }}
+          path: |
+            .nextflow.log
+            work/**/.command.*
+          include-hidden-files: true

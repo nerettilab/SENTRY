@@ -8,7 +8,7 @@ process PREPROCESS_ADATA {
 
     input:
     tuple val(meta), val(original_input_file)
-    val(threshold_combinations)
+    path(threshold_combinations)
     val(uns_name)
     val(sample_taxon)
     val(column2)
