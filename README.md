@@ -1,249 +1,197 @@
-<!-- [![GitHub Actions CI Status](https://github.com/nerettilab/SENTRY/actions/workflows/ci.yml/badge.svg)](https://github.com/nerettilab/SENTRY/actions/workflows/ci.yml) -->
-<!-- [![GitHub Actions Linting Status](https://github.com/nerettilab/SENTRY/actions/workflows/linting.yml/badge.svg)](https://github.com/nerettilab/SENTRY/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX) -->
-<!-- [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com) -->
+# SENTRY
 
+[![CI](https://github.com/nerettilab/SENTRY/actions/workflows/ci.yml/badge.svg)](https://github.com/nerettilab/SENTRY/actions/workflows/ci.yml)
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.04.0-23aa62.svg)](https://www.nextflow.io/)
-<!-- [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/) -->
-<!-- [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/) -->
-<!-- [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/) -->
-<!-- [![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/nerettilab/SENTRY) -->
+[![run with conda](https://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## Introduction
 
-**SENTRY (SENescence TRacking sYstem)** is a Nextflow pipeline for analyzing single-cell RNA sequencing (scRNA-seq) data. This pipeline integrates machine learning predictions (such as cellular senescence state, cell type, or disease state), gene expression analysis, and cell cycle scoring to provide detailed insights into cellular heterogeneity and gene regulation patterns. A key strength is its ability to chain multiple machine learning models together, allowing for sophisticated multi-stage prediction workflows.
+**SENTRY (SENescence TRacking sYstem)** is a Nextflow pipeline for analyzing single-cell RNA
+sequencing (scRNA-seq) data with machine learning classifiers. It labels every cell using any
+combination of:
 
-### Key Features
+- **ML model predictions**, including the pretrained SENTRY classifiers for senescent vs.
+  non-senescent cells and for primary vs. secondary senescence ([`models/`](models/README.md)),
+  or your own scikit-learn models. Models can be chained, so one model's output can filter or
+  refine another's.
+- **Gene expression**: above/below a threshold, or binned into levels.
+- **Cell cycle phase**, scored with the Tirosh et al. (2016) gene lists.
+- **Senescence signature scores** (SenSig) computed from a differential expression table.
 
-- **Unparalleled Flexibility**:
-  - Analyze any combination of genes, predictions, and metadata groupings
-  - Support for custom machine learning model predictions
-  - Configurable through simple JSON files - no code changes needed
-  - Works with any Scanpy AnnData or Seurat object, regardless of preprocessing method
-  - Chain multiple ML models together for cascading predictions
+It then summarizes how these labels are distributed across two metadata variables, for example
+age and cell type, and draws pie and bar charts for every combination. Human and mouse data are
+supported; genes are converted between the two species through one-to-one orthologs where a
+model needs it.
 
-- **Advanced ML Integration**:
-  - Support for cascading predictions from multiple ML models
-  - Custom class renaming and overwriting for model outputs
-  - Selective class filtering between prediction stages
-  - Seamless integration with gene expression and cell cycle analysis
+## Pipeline overview
 
-- **Comprehensive Analysis Options**:
-  - Gene expression analysis with customizable thresholds
-  - Integration of any machine learning model predictions
-  - Cell cycle scoring and analysis
-  - Binned expression analysis for continuous variables
-  - Custom metadata grouping and stratification
+1. **Convert** Seurat objects to AnnData, if `--seurat_input` is set.
+2. **Preprocess** (`PREPROCESS_ADATA`): apply every criterion in the threshold combinations
+   file to each sample and save the cell labels as a table.
+3. **Group** (`GROUP_ANALYSIS_COMBINATIONS`): count cells and compute proportions for each
+   `column1` × `column2` group, and per sample if `--sample_column` is given.
+4. **Plot** (`CREATE_PIES`, `CREATE_BARS`): one pie chart grid and a set of bar charts per
+   combination.
 
-- **Data Preprocessing**:
-  - Processes Scanpy AnnData files to incorporate:
-    - Gene expression levels for genes of interest
-    - Machine learning predictions
-    - Cell cycle scores
-  - Supports both raw and processed data
-  - Handles multiple data layers and formats
+## Quick start
 
-- **Data Analysis**: 
-  - Groups and aggregates data for statistical analysis
-  - Generates TSV files for downstream visualization
-  - Supports complex combinations of analysis criteria
-  - Flexible metadata stratification options
+1. Install [Nextflow](https://www.nextflow.io/docs/latest/install.html) (≥ 23.04.0) and
+   [conda](https://conda-forge.org/download/).
 
-- **Visualization**:
-  - Creates publication-quality plots using Seaborn and ggplot2
-  - Supports various visualization types for different analysis needs
-  - Customizable plot parameters and aesthetics
-  - Automated figure generation for all analysis combinations
+2. Check that everything works on the bundled synthetic test data:
 
-## Pipeline Overview
+   ```bash
+   nextflow run nerettilab/SENTRY -profile test,conda --outdir test_results
+   ```
 
-The pipeline consists of three main stages:
+3. Run on your own data:
 
-1. **Data Preprocessing**
-   - Input: Scanpy AnnData files
-   - Processing: Integration of gene expression, ML predictions, and cell cycle scores
-   - Output: Enhanced AnnData objects with additional analysis layers
-
-2. **Data Grouping**
-   - Input: Preprocessed AnnData objects
-   - Processing: Aggregation and grouping of data based on specified criteria
-   - Output: TSV files containing grouped data for visualization
-
-3. **Visualization**
-   - Input: Grouped data TSV files
-   - Processing: Generation of statistical plots
-   - Output: Publication-ready visualizations
-
-## Usage
+   ```bash
+   nextflow run nerettilab/SENTRY \
+      -profile conda \
+      --input samplesheet.csv \
+      --threshold_combinations threshold_combinations.json \
+      --column1 age \
+      --column2 cell_type \
+      --outdir results
+   ```
 
 > [!NOTE]
-> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
+> Software is provided through conda environments (`-profile conda` or `-profile mamba`).
+> The pipeline does not yet ship container images, so `-profile docker` and
+> `-profile singularity` do not provide the required software.
 
-### Input Data Preparation
+## Inputs
 
-Prepare a samplesheet with your input data in CSV format:
+### Samplesheet
 
-`samplesheet.csv`:
+A CSV file with one row per AnnData (`.h5ad`) or Seurat (`.rds`) object. Relative paths are
+resolved from the folder that contains the samplesheet.
+
 ```csv
 sample,sc_object
-SAMPLE_SCANPY_NAME,/path/to/scanpy/files/scanpy_file.h5ad
+young_lung,/data/young_lung.h5ad
+old_lung,/data/old_lung.h5ad
 ```
 
-Each row represents a single Scanpy AnnData object to be analyzed.
+The pipeline expects **raw counts**. If `adata.X` holds normalized values, point the pipeline
+at the counts with `--use_raw` or `--layer_name`.
 
-Create a JSON configuration file (`threshold_combinations.json`) that defines your analysis criteria. The pipeline supports various analysis types, including chaining multiple ML models:
+### Threshold combinations
+
+A JSON file that defines named criteria and lists the combinations to analyze. Each
+combination produces one label per cell, made by joining the labels of its criteria with `_`.
+Relative paths in the file are resolved from the file's own folder.
+
+This example uses both SENTRY models. The second combination reports primary vs. secondary
+senescence only for cells that the first model calls senescent:
 
 ```json
 {
   "definitions": {
-    "cell_type": {
-      "type": "model",
-      "path": "/path/to/cell_type_model.pkl",
-      "taxon": 9606,
-      "rename_classes": {
-        "T_cell": "T",
-        "B_cell": "B"
-      }
-    },
     "senescence": {
       "type": "model",
-      "path": "/path/to/senescence_model.pkl",
-      "taxon": 9606,
-      "model_select": {
-        "keep_classes": ["Senescent"]
-      }
+      "path": "/path/to/SENTRY/models/sentry_senescent_vs_nonsenescent_rf.pkl",
+      "taxon": 9606
     },
-    "primary_vs_secondary_senescent": {
-      "type": "model",
-      "path": "/path/to/disease_model.pkl",
+    "senescent_only": {
+      "type": "model_select",
+      "path": "/path/to/SENTRY/models/sentry_senescent_vs_nonsenescent_rf.pkl",
       "taxon": 9606,
-      "overwrite_classes": {
-        "primary": "Primary",
-        "secondary": "Secondary"
-      }
-    }
+      "keep_classes": ["Senescent"]
+    },
+    "senescence_type": {
+      "type": "model",
+      "path": "/path/to/SENTRY/models/sentry_primary_vs_secondary_rf.pkl",
+      "taxon": 9606
+    },
+    "cell_cycle": { "type": "cell_cycle" },
+    "CDKN1A": { "type": "gene", "threshold": 2 }
   },
   "combinations": [
-    ["cell_type", "senescence", "disease_state"]
+    ["senescence"],
+    ["senescent_only", "senescence_type"],
+    ["senescence", "cell_cycle"],
+    ["CDKN1A", "senescence"]
   ]
 }
 ```
 
-This configuration demonstrates:
-- Chaining multiple ML models together
-- Renaming classes from the first model
-- Filtering predictions based on previous model results
+The criterion types are `model`, `model_select`, `gene`, `bins`, `cell_cycle`, `sensig_score`
+and `comparative_score`. See [docs/usage.md](docs/usage.md) for every option, and
+[`assets/test/threshold_combinations.json`](assets/test/threshold_combinations.json) for a
+working example.
 
-### Running the Pipeline
+### Main parameters
 
-Basic command:
-```bash
-nextflow run nerettilab/SENTRY \
-   -profile <docker/singularity/.../institute> \
-   --input samplesheet.csv \
-   --outdir <OUTDIR> \
-   --threshold_combinations threshold_combinations.json \
-   --column1 age \
-   --column2 cell_type
-```
+| Parameter | Description |
+| --- | --- |
+| `--input` | Samplesheet CSV (required). |
+| `--outdir` | Output directory (required). |
+| `--threshold_combinations` | Criteria and combinations JSON (required). |
+| `--column1` | `adata.obs` column for the first grouping level, e.g. `age` (required). |
+| `--column2` | `adata.obs` column for the second grouping level, e.g. `cell_type` (required). |
+| `--sample_column` | `adata.obs` column identifying samples or replicates; adds per-sample proportions and error bars. |
+| `--sample_taxon` | `9606` (human, default) or `10090` (mouse). |
+| `--use_raw` / `--layer_name` | Read counts from `adata.raw` or from a layer instead of `adata.X`. |
+| `--var_colname` | `adata.var` column with gene symbols, if `var_names` are not symbols. |
+| `--seurat_input` | Inputs are Seurat `.rds` files. |
+| `--save_h5ad` | Also save each annotated AnnData object. |
+| `--uns_name` | Prefix for output file names (default `analyzed_data`). |
 
-Required parameters:
-- `--input`: Path to comma-separated file containing information about the samples in the experiment
-- `--outdir`: The output directory where the results will be saved
-- `--threshold_combinations`: Path to JSON file containing the combinations of factors to be analyzed
-- `--column1`: First grouping category (e.g., age, condition)
-- `--column2`: Second grouping category (e.g., cell type)
+Run `nextflow run nerettilab/SENTRY --help` for the full list.
 
-Optional parameters:
-- `--sample_column`: Column name for sample identification
-- `--use_raw`: Whether to use raw counts
-- `--layer_name`: Layer name to use for analysis
-- `--minimal_genes`: Whether to subset to minimal required genes
-- `--random_sample_proportion`: Proportion for random cell sampling
-
-For more detailed usage instructions and parameter descriptions, please refer to the [documentation](docs/usage.md).
-
-> [!WARNING]
-> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_;
-> see [docs](https://nf-co.re/usage/configuration#custom-configuration-files).
-
-## Credits
-
-nerettilab/SENTRY was originally written by Samuel Hinthorn.
-
-## Contributions and Support
-
-If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
-
-## Citations
-
-If you use SENTRY in your research, please cite:
-
-> Hinthorn S, Rocha A, Neretti N. SENTRY: An AI Framework for Identifying and Characterizing Primary and Secondary Senescence. _(in preparation)_
-
-The single-cell RNA-seq data generated for the study are available from GEO under accession [GSE306635](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE306635).
-
-An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
-
-This pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
-
-> **The nf-core framework for community-curated bioinformatics pipelines.**
->
-> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
->
-> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
-
-## Output
-
-The pipeline generates comprehensive visualizations and analysis results that help understand cellular heterogeneity and gene regulation patterns across different conditions.
-
-### Visualizations
-
-The pipeline creates visualizations in png, pdf, or svg format:
-
-1. **Pie Charts**: Show the distribution of cell states within each group
-   ![Example pie chart showing distribution of senescence scores](docs/images/organs_sensig_score_pie_chart.png)
-   *Distribution of senescence scores across different  organs*
-
-2. **Bar Charts**: Display proportions and comparisons between groups
-   ![Example bar chart showing preadipocyte proportions over time](docs/images/preadipocyte_bar_chart.png)
-   *Proportions of preadipocytes with primary vs. secondary senescence over time*
-
-### Analysis Results
-
-The pipeline generates several types of output files:
-
-1. **Processed Data**:
-   - TSV files containing grouped analysis results
-   - Optional preprocessed h5ad files with added metadata
-   - Gene combination analysis results
-
-2. **Statistical Analysis**:
-   - Proportions and counts for each combination
-   - Cross-tabulation of different analysis criteria
-   - Sample-level statistics when sample information is provided
-
-3. **Pipeline Reports**:
-   - Execution reports
-   - Software versions
-   - Resource usage logs
-
-### Output Directory Structure
+## Outputs
 
 ```
 results/
-├── preprocessed/
-│   ├── sample1_processed.tsv
-│   └── sample2_processed.tsv
-├── pie_charts/
-│   ├── sample1_pie_charts.png
-│   └── sample2_pie_charts.png
-├── bar_charts/
-│   ├── sample1_bar_charts.png
-│   └── sample2_bar_charts.png
-├── multiqc/
-│   ├── multiqc_report.html
-│   └── multiqc_data/
-└── pipeline_info/
-    ├── execution_report.html
-    └── software_versions.csv
+├── preprocessed/   <prefix>_<sample>_processed_data.tsv.gz   cell metadata plus one column per combination
+├── group/          <prefix>_<sample>_<combination>_gene_combinations[_with_sample].tsv
+├── pie_charts/     <prefix>_<sample>_<combination>_pie.png
+├── bar_charts/     <prefix>_<sample>_<column2 value>_<combination>_bar_chart.svg
+├── multiqc/        run report with parameters and software versions
+└── pipeline_info/  Nextflow execution report, timeline, trace and DAG
 ```
+
+See [docs/output.md](docs/output.md) for the columns of each table and how to read the charts.
+
+<p align="center">
+  <img src="docs/images/organs_sensig_score_pie_chart.png" alt="Grid of pie charts showing the distribution of senescence score levels in each organ and age group" width="45%">
+  <img src="docs/images/preadipocyte_bar_chart.png" alt="Bar chart of the proportions of primary and secondary senescent preadipocytes over time" width="45%">
+</p>
+
+_Left: senescence score levels across organs and ages. Right: primary vs. secondary
+senescent preadipocytes over time._
+
+## Citation
+
+If you use SENTRY in your research, please cite:
+
+> Hinthorn S, Rocha A, Neretti N. SENTRY: An AI Framework for Identifying and Characterizing
+> Primary and Secondary Senescence. _(in preparation)_
+
+The single-cell RNA-seq data generated for the study are available from GEO under accession
+[GSE306635](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE306635).
+
+[`CITATIONS.md`](CITATIONS.md) lists the tools and resources the pipeline uses. Please cite
+them as well.
+
+## Credits
+
+SENTRY was written by Samuel Hinthorn in the [Neretti Lab](https://github.com/nerettilab) at
+Brown University.
+
+The pipeline is built on the [nf-core](https://nf-co.re) template and uses code and
+infrastructure developed by the nf-core community, reused under the
+[MIT license](https://github.com/nf-core/tools/blob/master/LICENSE):
+
+> Ewels PA, Peltzer A, Fillinger S, Patel H, Alneberg J, Wilm A, Garcia MU, Di Tommaso P,
+> Nahnsen S. The nf-core framework for community-curated bioinformatics pipelines. _Nat
+> Biotechnol._ 2020;38(3):276-278. doi:
+> [10.1038/s41587-020-0439-x](https://doi.org/10.1038/s41587-020-0439-x)
+
+## Contributing
+
+Bug reports and pull requests are welcome; see the
+[contributing guidelines](.github/CONTRIBUTING.md).

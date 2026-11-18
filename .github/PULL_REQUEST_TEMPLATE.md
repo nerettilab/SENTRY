@@ -1,25 +1,13 @@
 <!--
-# nerettilab/SENTRY pull request
-
-Many thanks for contributing to nerettilab/SENTRY!
-
-Please fill in the appropriate checklist below (delete whatever is not relevant).
-These are the most common things requested on pull requests (PRs).
-
-Remember that PRs should be made against the dev branch, unless you're preparing a pipeline release.
-
-Learn more about contributing: [CONTRIBUTING.md](https://github.com/nerettilab/SENTRY/tree/master/.github/CONTRIBUTING.md)
+Thanks for contributing to SENTRY! Please describe your changes and why you made them, and
+tick the items below that apply. See .github/CONTRIBUTING.md for details.
 -->
 
 ## PR checklist
 
-- [ ] This comment contains a description of changes (with reason).
-- [ ] If you've fixed a bug or added code that should be tested, add tests!
-- [ ] If you've added a new tool - have you followed the pipeline conventions in the [contribution docs](https://github.com/nerettilab/SENTRY/tree/master/.github/CONTRIBUTING.md)
-- [ ] Make sure your code lints (`nf-core lint`).
-- [ ] Ensure the test suite passes (`nextflow run . -profile test,docker --outdir <OUTDIR>`).
-- [ ] Check for unexpected warnings in debug mode (`nextflow run . -profile debug,test,docker --outdir <OUTDIR>`).
-- [ ] Usage Documentation in `docs/usage.md` is updated.
-- [ ] Output Documentation in `docs/output.md` is updated.
+- [ ] The description explains what changed and why.
+- [ ] The test profile passes: `nextflow run . -profile test,conda --outdir results`.
+- [ ] New parameters are added to `nextflow.config` and `nextflow_schema.json`.
+- [ ] `docs/usage.md` and `docs/output.md` are updated if usage or outputs changed.
 - [ ] `CHANGELOG.md` is updated.
-- [ ] `README.md` is updated (including new tool citations and authors/contributors).
+- [ ] New tools are cited in `CITATIONS.md`.

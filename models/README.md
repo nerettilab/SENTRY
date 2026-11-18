@@ -25,9 +25,11 @@ The first model was originally saved as `binary_sen_upgraded_pie_7810947.pkl`, a
 
 ## Using the models in the pipeline
 
-Reference the models by absolute path in your `--threshold_combinations` file. If you ran the
-pipeline with `nextflow run nerettilab/SENTRY`, Nextflow keeps a copy of this repository at
-`~/.nextflow/assets/nerettilab/SENTRY/`.
+Reference the models in your `--threshold_combinations` file, by absolute path or relative to
+the JSON file's folder. If you ran the pipeline with `nextflow run nerettilab/SENTRY`, Nextflow
+keeps a copy of this repository at `~/.nextflow/assets/nerettilab/SENTRY/`.
+[`assets/test/threshold_combinations.json`](../assets/test/threshold_combinations.json) uses
+both models with relative paths.
 
 ```json
 {

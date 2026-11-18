@@ -1,323 +1,240 @@
-# nerettilab/SENTRY: Usage
+# SENTRY: Usage
 
-## Introduction
-
-The nerettilab/SENTRY is designed to analyze single-cell RNA sequencing data by integrating gene expression analysis, machine learning predictions, and cell cycle scoring. The pipeline processes Scanpy AnnData objects and generates visualizations for understanding cellular heterogeneity.
-
-## Pipeline Parameters
-
-### Required Parameters
-
-* `--input`: Path to samplesheet CSV file containing sample information
-* `--outdir`: Output directory for results
-* `--threshold_combinations`: JSON file specifying analysis combinations
-* `--column1`: First grouping category (e.g., age, condition)
-* `--column2`: Second grouping category (e.g., cell type)
-
-### Optional Parameters
-
-* `--sample_column`: Column name for sample identification (e.g., 'orig.ident', 'sample')
-* `--uns_name`: Name to add to the processed data (default: 'analyzed_data')
-* `--sample_taxon`: Sample taxonomy ID (default: 9606 for human)
-* `--use_raw`: Whether to use raw counts from adata.raw if present
-* `--var_colname`: Column name in adata.var to use for variable names
-* `--layer_name`: Layer name to use for analysis
-* `--minimal_genes`: Whether to subset to minimal required genes (default: false)
-* `--random_sample_proportion`: Proportion for random cell sampling (default: 1)
-* `--seurat_input`: Whether input is in Seurat format (default: false)
-* `--save_h5ad`: Whether to save preprocessed h5ad file (default: false)
-
-## Input Format
-
-### Samplesheet Format
-
-The input samplesheet must be a comma-separated file with the following columns:
-
-```csv
-sample,sc_object
-SAMPLE1,/path/to/sample1.h5ad
-SAMPLE2,/path/to/sample2.h5ad
-```
-
-* `sample`: Sample identifier
-* `sc_object`: Path to Scanpy AnnData (.h5ad) or Seurat object
-
-### Threshold Combinations Format
-
-The threshold combinations file should be a JSON file specifying analysis criteria. It supports several types of analyses:
-
-1. Gene Expression Analysis:
-```json
-{
-  "definitions": {
-    "gene1": {
-      "type": "gene",
-      "threshold": 1.0
-    }
-  },
-  "combinations": [["gene1"]]
-}
-```
-
-2. Machine Learning Model Predictions:
-```json
-{
-  "definitions": {
-    "model1": {
-      "type": "model",
-      "path": "/path/to/model.pkl",
-      "taxon": 9606
-    }
-  },
-  "combinations": [["model1"]]
-}
-```
-
-3. Cell Cycle Scoring:
-```json
-{
-  "definitions": {
-    "cell_cycle": {
-      "type": "cell_cycle"
-    }
-  },
-  "combinations": [["cell_cycle"]]
-}
-```
-
-4. Binned Expression Analysis:
-```json
-{
-  "definitions": {
-    "gene_bins": {
-      "type": "bins",
-      "gene": "GENE1",
-      "num_bins": 5,
-      "upper_limit_percentile": 95,
-      "lower_limit_percentile": 5
-    }
-  },
-  "combinations": [["gene_bins"]]
-}
-```
-
-## Running the Pipeline
-
-The typical command for running the pipeline is:
+## Running the pipeline
 
 ```bash
 nextflow run nerettilab/SENTRY \
-  --input samplesheet.csv \
-  --outdir ./results \
-  --threshold_combinations config.json \
-  --column1 age \
-  --column2 cell_type \
-  -profile docker
+   -profile conda \
+   --input samplesheet.csv \
+   --threshold_combinations threshold_combinations.json \
+   --column1 age \
+   --column2 cell_type \
+   --sample_column orig.ident \
+   --outdir results
 ```
 
-### Using Configuration Files
-
-For repeated runs, you can provide parameters in a YAML/JSON file:
-
-```bash
-nextflow run nerettilab/SENTRY -profile docker -params-file params.yaml
-```
-
-Example params.yaml:
-```yaml
-input: 'samplesheet.csv'
-outdir: 'results'
-threshold_combinations: 'config.json'
-column1: 'age'
-column2: 'cell_type'
-sample_column: 'orig.ident'
-use_raw: true
-save_h5ad: true
-```
-
-## Output
-
-The pipeline generates:
-
-1. Processed Data:
-   * TSV files containing grouped analysis results
-   * Optional preprocessed h5ad files
-   * Gene combination analysis results
-
-2. Visualizations:
-   * Bar charts showing proportions across groups
-   * Pie charts displaying cell type distributions
-   * Combined visualizations based on analysis criteria
-
-3. Pipeline Info:
-   * Pipeline execution reports
-   * Software versions
-   * Resource usage logs
-
-## Resource Requirements
-
-The pipeline is configured with reasonable defaults for resource requirements:
-
-* Default maximum CPUs: 16
-* Default maximum memory: 256 GB
-* Default maximum time: 240 hours
-
-These can be adjusted using:
-* `--max_cpus`
-* `--max_memory`
-* `--max_time`
-
-
-
-If you wish to repeatedly use the same parameters for multiple runs, rather than specifying each flag in the command, you can specify these in a params file.
-
-Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <file>`.
-
-:::warning
-Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources), other infrastructural tweaks (such as output directories), or module arguments (args).
-:::
-
-The above pipeline run specified with a params file in yaml format:
-
-```bash
-nextflow run nerettilab/SENTRY -profile docker -params-file params.yaml
-```
-
-with `params.yaml` containing:
+To repeat a run with the same settings, put the parameters in a YAML or JSON file and pass it
+with `-params-file`:
 
 ```yaml
-input: './samplesheet.csv'
-outdir: './results/'
-<...>
+# params.yaml
+input: "samplesheet.csv"
+threshold_combinations: "threshold_combinations.json"
+column1: "age"
+column2: "cell_type"
+sample_column: "orig.ident"
+outdir: "results"
 ```
 
-You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
-
-<!-- ### Updating the pipeline
-
-When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline: -->
-
-<!-- ```bash
-nextflow pull nerettilab/SENTRY
-``` -->
-
-<!-- ### Reproducibility
-
-It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
-
-First, go to the [nerettilab/SENTRY releases page](https://github.com/nerettilab/SENTRY/releases) and find the latest pipeline version - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`. Of course, you can switch to another version by changing the number after the `-r` flag.
-
-This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future. For example, at the bottom of the MultiQC reports.
-
-To further assist in reproducbility, you can use share and re-use [parameter files](#running-the-pipeline) to repeat pipeline runs with the same settings without having to write out a command with every single parameter.
-
-:::tip
-If you wish to share such profile (such as upload as supplementary material for academic publications), make sure to NOT include cluster specific paths to files, nor institutional specific profiles.
-:::
-
-## Core Nextflow arguments
-
-:::note
-These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
-:::
-
-### `-profile`
-
-Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.
-
-Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Podman, Shifter, Charliecloud, Apptainer, Conda) - see below.
-
-:::info
-We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
-:::
-
-The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to see if your system is available in these configs please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
-
-Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
-They are loaded in sequence, so later profiles can overwrite earlier profiles.
-
-If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended, since it can lead to different results on different machines dependent on the computer enviroment.
-
-- `test`
-  - A profile with a complete configuration for automated testing
-  - Includes links to test data so needs no other parameters
-- `docker`
-  - A generic configuration profile to be used with [Docker](https://docker.com/)
-- `singularity`
-  - A generic configuration profile to be used with [Singularity](https://sylabs.io/docs/)
-- `podman`
-  - A generic configuration profile to be used with [Podman](https://podman.io/)
-- `shifter`
-  - A generic configuration profile to be used with [Shifter](https://nersc.gitlab.io/development/shifter/how-to-use/)
-- `charliecloud`
-  - A generic configuration profile to be used with [Charliecloud](https://hpc.github.io/charliecloud/)
-- `apptainer`
-  - A generic configuration profile to be used with [Apptainer](https://apptainer.org/)
-- `wave`
-  - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow ` 24.03.0-edge` or later).
-- `conda`
-  - A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter, Charliecloud, or Apptainer.
-
-### `-resume`
-
-Specify this when restarting a pipeline. Nextflow will use cached results from any pipeline steps where the inputs are the same, continuing from where it got to previously. For input to be considered the same, not only the names must be identical but the files' contents as well. For more info about this parameter, see [this blog post](https://www.nextflow.io/blog/2019/demystifying-nextflow-resume.html).
-
-You can also supply a run name to resume a specific run: `-resume [run-name]`. Use the `nextflow log` command to show previous run names.
-
-### `-c`
-
-Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
-
-## Custom configuration
-
-### Resource requests
-
-Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher requests (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
-
-To change the resource requests, please see the [max resources](https://nf-co.re/docs/usage/configuration#max-resources) and [tuning workflow resources](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources) section of the nf-core website.
-
-### Custom Containers
-
-In some cases you may wish to change which container or conda environment a step of the pipeline uses for a particular tool. By default nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However in some cases the pipeline specified version maybe out of date.
-
-To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/usage/configuration#updating-tool-versions) section of the nf-core website.
-
-### Custom Tool Arguments
-
-A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.
-
-To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/usage/configuration#customising-tool-arguments) section of the nf-core website.
-
-### nf-core/configs
-
-In most cases, you will only need to create a custom config as a one-off but if you and others within your organisation are likely to be running nf-core pipelines regularly and need to use the same settings regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter. You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
-
-See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
-
-If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
-
-## Azure Resource Requests
-
-To be used with the `azurebatch` profile by specifying the `-profile azurebatch`.
-We recommend providing a compute `params.vm_type` of `Standard_D16_v3` VMs by default but these options can be changed if required.
-
-Note that the choice of VM size depends on your quota and the overall workload during the analysis.
-For a thorough list, please refer the [Azure Sizes for virtual machines in Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes).
-
-## Running in the background
-
-Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
-
-The Nextflow `-bg` flag launches Nextflow in the background, detached from your terminal so that the workflow does not stop if you log out of your session. The logs are saved to a file.
-
-Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
-Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
-
-## Nextflow memory requirements
-
-In some cases, the Nextflow Java virtual machines can start to request a large amount of memory.
-We recommend adding the following line to your environment to limit this (typically in `~/.bashrc` or `~./bash_profile`):
-
 ```bash
-NXF_OPTS='-Xms1g -Xmx4g'
-``` -->
+nextflow run nerettilab/SENTRY -profile conda -params-file params.yaml
+```
+
+> [!WARNING]
+> Pass pipeline parameters on the command line or with `-params-file`, not in a config file
+> given with `-c`. Use `-c` only for resource and executor settings.
+
+Use `-r <release tag>` to pin a release so results can be reproduced,
+and `-resume` to continue a run from cached steps.
+
+## Profiles
+
+| Profile | Use |
+| --- | --- |
+| `conda` | Create the software environments with conda. Recommended. |
+| `mamba` | Like `conda`, using mamba to create the environments. With mamba 2, set `MAMBA_ALWAYS_YES=true` so environment creation does not wait for confirmation. |
+| `test` | Run on the bundled synthetic data in `assets/test`. Combine with `conda`: `-profile test,conda`. |
+| `debug` | Keep work files and print extra diagnostics. |
+
+The `docker`, `singularity`, `podman` and similar profiles come from the nf-core template.
+The pipeline does not yet provide container images, so they do not supply the required software.
+
+## Samplesheet
+
+`--input` is a CSV file with a header and two columns:
+
+| Column | Description |
+| --- | --- |
+| `sample` | Sample name, without spaces. Used in output file names. |
+| `sc_object` | Path to an AnnData `.h5ad` file, or a Seurat `.rds` file with `--seurat_input`. Relative paths are resolved from the samplesheet's folder. |
+
+```csv
+sample,sc_object
+young_lung,/data/young_lung.h5ad
+old_lung,old_lung.h5ad
+```
+
+Each object should contain:
+
+- **Raw counts** in `adata.X`, `adata.raw.X` (`--use_raw`) or a layer (`--layer_name counts`).
+  Model inputs, gene thresholds and signature scores are all computed from these counts.
+- **Gene symbols** as `var_names`, or in an `adata.var` column given with `--var_colname`.
+  Duplicate symbols are averaged into one gene.
+- The `adata.obs` columns named by `--column1`, `--column2` and, if used, `--sample_column`.
+
+If `--column1` is `age` or `development_stage`, the first number in each value is used, so
+`"18m"` becomes `18` and `"3-month-old"` becomes `3`. Units are not converted, so all values
+should use the same unit.
+
+## Threshold combinations file
+
+`--threshold_combinations` is a JSON file with two keys:
+
+- `definitions`: named criteria, each with a `type` and its options.
+- `combinations`: lists of criterion names. Each list becomes one analysis.
+
+```json
+{
+  "definitions": {
+    "senescence": { "type": "model", "path": "models/senescence.pkl", "taxon": 9606 },
+    "cell_cycle": { "type": "cell_cycle" }
+  },
+  "combinations": [["senescence"], ["senescence", "cell_cycle"]]
+}
+```
+
+For each combination, every cell gets one label made by joining its criteria labels with `_`
+in the order listed, for example `Senescent_G1`. The labels are stored in a column named
+`combination_<name1>_<name2>...`. Cells that get no label (see `model_select`) are left out of
+that combination's tables and charts.
+
+File paths inside the JSON (`path`, `gene_set_file`, `filepath`) can be absolute, or relative
+to the JSON file's folder. A combination that uses a gene missing from a sample is skipped for
+that sample with a warning. Each criterion is computed once per sample, even if several
+combinations use it.
+
+The older format, a list of `{ "<name>": { ...config } }` objects with one object per
+combination, is still accepted.
+
+### `model`: machine learning predictions
+
+Applies a pickled scikit-learn classifier, such as the [SENTRY models](../models/README.md).
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `path` | yes | Pickled classifier with `predict` and `feature_names_in_`. |
+| `taxon` | yes | NCBI taxon of the model's genes: `9606` or `10090`. If it differs from `--sample_taxon`, the data are converted through one-to-one human–mouse orthologs. |
+| `rename_classes` | no | Map of predicted class to label, e.g. `{"Senescent": "Sen"}`. Unlisted classes keep their name. |
+| `overwrite_classes` | no | Map of predicted class to label. Cells predicted as a listed class have the label built so far in the combination **replaced** with this label; other cells are unchanged. Useful for overriding an earlier model's call. |
+| `gene_set_file` | no | Tab-separated file listing the model's features, if the model has no `feature_names_in_`. The genes must be in the order the model was trained on. |
+| `gene_set_file_header` | no | Header row of `gene_set_file` (default `0`, the first row); `null` if there is none. |
+| `gene_set_gene_column` | no | Column of `gene_set_file` that holds the genes (default: the first). |
+
+The data are subset to the model's genes, with missing genes set to 0, then normalized to
+10,000 counts per cell and log2-transformed (`log2(x + 1)`). Your model must be trained on data
+prepared the same way, with normalization after subsetting to its genes.
+
+> [!CAUTION]
+> Pickle files can run arbitrary code when loaded. Only use models from sources you trust.
+
+### `model_select`: keep cells of selected classes
+
+Applies a model like `model`, but adds nothing to the label. Cells predicted as one of
+`keep_classes` stay in the combination and all others are dropped. Use it to restrict the rest
+of a combination to, for example, senescent cells.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `path`, `taxon` | yes | As for `model`. |
+| `keep_classes` | yes | List of predicted classes to keep. |
+
+### `gene`: expression threshold
+
+The criterion name is the gene symbol. Cells are labelled `<GENE>_pos` if their raw count is
+above `threshold`, and `<GENE>_neg` otherwise.
+
+```json
+"CDKN1A": { "type": "gene", "threshold": 2 }
+```
+
+### `bins`: expression levels
+
+Splits a gene's normalized expression (counts per 10,000, not log-transformed) into levels,
+separately within each `--column2` group.
+
+| Option | Description |
+| --- | --- |
+| `gene` | Gene symbol. |
+| `lower_limit_percentile`, `upper_limit_percentile` | Percentiles (0–100) of the gene's expression within the group that set the lowest and highest bin edges. If the upper percentile is 0, the maximum is used. If the lower percentile is 0, the smallest non-zero value is used. |
+| `num_bins` | Number of evenly spaced bin edges between the two limits. |
+
+Labels are `<name>_lvl_<k>`, where `k` runs from `0` (below the lowest edge) to `num_bins`
+(at or above the highest edge).
+
+### `cell_cycle`: cell cycle phase
+
+Labels cells `G1`, `S` or `G2M` with Scanpy's `score_genes_cell_cycle`, using the Tirosh et al.
+(2016) S and G2/M gene lists. Expression is normalized, log-transformed and scaled first.
+For mouse data (`--sample_taxon 10090`), the human genes are converted to their mouse
+orthologs. No options.
+
+### `sensig_score`: senescence signature score
+
+Scores each cell against a gene signature from a differential expression table, following the
+SenSig method (Cherry et al., 2023). Each signature gene is z-scored across cells, multiplied
+by the sign of its log fold change, and the results are summed. The scores are then binned
+within each `--column2` group as for `bins`, and cells are labelled `sensig_score<k>`.
+
+| Option | Description |
+| --- | --- |
+| `params.filepath` | Tab-separated differential expression table. |
+| `params.gene_symbol_column` | Column with gene symbols. |
+| `params.log_fc_column` | Column with log fold changes. |
+| `params.filter_column`, `params.threshold` | Keep genes with `filter_column < threshold`, e.g. `"FDR"` and `0.05`. Set `threshold` to `null` to keep all genes. |
+| `params.new_score_column` | Name for the score column. |
+| `num_bins`, `lower_limit_percentile`, `upper_limit_percentile` | Binning, as for `bins`. |
+
+### `comparative_score`: signature score relative to another signature
+
+Like `sensig_score`, but only uses genes of the main signature that are absent from a
+competing signature or have the opposite sign there. Both tables are read with their first
+column as the index.
+
+| Option | Description |
+| --- | --- |
+| `main_params` | Signature options, as `params` for `sensig_score`. Its `new_score_column` is also the label prefix: cells are labelled `<new_score_column><k>`. |
+| `competitor_params` | Options for the competing signature (`new_score_column` not needed). |
+| `num_bins`, `lower_limit_percentile`, `upper_limit_percentile` | Binning, as for `bins`. |
+
+## Parameters
+
+### Required
+
+| Parameter | Description |
+| --- | --- |
+| `--input` | Samplesheet CSV. |
+| `--outdir` | Output directory. |
+| `--threshold_combinations` | Criteria and combinations JSON. |
+| `--column1` | `adata.obs` column for the first grouping level, usually a phenotype such as age. |
+| `--column2` | `adata.obs` column for the second grouping level, usually cell type or tissue. |
+
+### Optional
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `--sample_column` | none | `adata.obs` column with sample or replicate IDs. Adds per-sample tables and bar chart error bars. |
+| `--sample_taxon` | `9606` | Taxon of the input data: `9606` (human) or `10090` (mouse). |
+| `--use_raw` | `false` | Read counts from `adata.raw.X`. |
+| `--layer_name` | none | Read counts from this layer of the object. |
+| `--var_colname` | none | `adata.var` column with gene symbols. |
+| `--seurat_input` | `false` | Convert Seurat `.rds` inputs to AnnData first. |
+| `--save_h5ad` | `false` | Also save each annotated AnnData object. |
+| `--uns_name` | `analyzed_data` | Prefix for output file names. |
+| `--max_cpus`, `--max_memory`, `--max_time` | `16`, `256.GB`, `240.h` | Upper limits for any single task. |
+| `--publish_dir_mode` | `link` | How results are placed in `--outdir`. Use `copy` if the work directory is on a different file system. |
+
+Run `nextflow run nerettilab/SENTRY --help --validationShowHiddenParams` for every parameter.
+
+## Resources
+
+`PREPROCESS_ADATA` loads each object into memory as a dense matrix, so its memory use grows
+with cells × genes. It requests up to `--max_memory` (256 GB by default) and retries with more
+memory once if it runs out. Lower `--max_memory` to fit your machine, or see the
+[Nextflow configuration docs](https://www.nextflow.io/docs/latest/config.html) to set resources
+for individual processes with `-c`.
+
+## Seurat input
+
+With `--seurat_input`, each `.rds` file is converted to AnnData with
+[sceasy](https://github.com/cellgeni/sceasy), using the counts of the `RNA` assay. Seurat v5
+objects are converted to the v3 assay format first.
