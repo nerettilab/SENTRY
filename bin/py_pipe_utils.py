@@ -75,15 +75,9 @@ def apply_model(adata: anndata.AnnData,
         # Convert the AnnData object to the model taxon
         adata = convert_species.convert_species_one2one_adata(adata, one2one_dict, target_genes=target_gene_set)
     else:
-        # Get the genes that are not in the AnnData object
-        genes_not_in_adata = set(clf.feature_names_in_).difference(set(adata.var_names))
-
-        # Create a new AnnData object with the missing genes
-        adata_df = adata.to_df()[list(set(adata.var_names).intersection(set(target_gene_set)))]
-        adata_df[list(genes_not_in_adata)] = 0
-        adata_df = adata_df[target_gene_set]
-        new_adata = anndata.AnnData(adata_df)
-        adata = new_adata
+        # Subset to the model's genes in the model's order, filling genes missing from the data with 0
+        adata_df = adata.to_df().reindex(columns=target_gene_set, fill_value=0)
+        adata = anndata.AnnData(adata_df)
 
     # Normalize and log-transform the AnnData object
     sc.pp.normalize_total(adata, target_sum=1e4)
